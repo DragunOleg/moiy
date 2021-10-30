@@ -18,6 +18,7 @@ def basis_matrix(A, Jb):
     Ab = np.arange(Jb_count ** 2, dtype=float).reshape((Jb_count, Jb_count))
     for i in range(Jb_count):
         for j in range(Jb_count):
+            someInt = Jb[i] - 1
             Ab[i][j] = A[j][Jb[i] - 1]
     return Ab
 
@@ -109,5 +110,4 @@ def simplex_main_phase(c, A, B, x, Jb, iteration=0):
 
     simplex_main_phase(c, A, new_B, new_x, new_Jb, iteration + 1)
 
-
-simplex_main_phase(c, A, None, x, Jb)
+# simplex_main_phase(c, A, None, x, Jb)
