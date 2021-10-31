@@ -1,113 +1,134 @@
 import numpy as np
-
-A = np.array([[1., 2., 1., 0., 0., 0.],
-              [2., 1., 0., 1., 0., 0.],
-              [1., 0., 0., 0., 1., 0.],
-              [0., 1., 0., 0., 0., 1.]])
-
-b = np.array([10., 11., 5., 4.])
-
-c = np.array([20., 26., 0., 0., 0., 1.])
-
-x = np.array([2., 4., 0., 3., 3., 0.])
-Jb = np.array([5, 2, 1, 4])
+from numpy.linalg import linalg
 
 
-def basis_matrix(A, Jb):
-    Jb_count = len(Jb)
-    Ab = np.arange(Jb_count ** 2, dtype=float).reshape((Jb_count, Jb_count))
-    for i in range(Jb_count):
-        for j in range(Jb_count):
-            someInt = Jb[i] - 1
-            Ab[i][j] = A[j][Jb[i] - 1]
-    return Ab
+def inv_matrix(A_inv, i, x, n):
+    l = np.dot(A_inv, x)
+    li = l[i]
+    print(l)
+    if l[i] == 0:
+        print("False")
+        return
+    print("True")
+    l[i] = -1
+    l_ = [(-1 / li) * x for x in l]
+    # print(l_)
+
+    Q = np.eye(n)
+    for j in range(0, n):
+        Q[j][i] = l_[j]
+    # print(Q)
+
+    ans = np.dot(Q, A_inv)
+    return ans
 
 
-def simplex_main_phase(c, A, B, x, Jb, iteration=0):
-    print("\n------- Итерация №", iteration, ' -------')
-    Ab = basis_matrix(A, Jb)
-    Jn = np.setdiff1d(np.arange(1, A.shape[1] + 1, 1), Jb)
+def simplex_method(c, A, b, x, jb):
+    iter_count = 0
+    n = len(x)
+    m = len(jb)
+    Ab = np.zeros((m, m))
+    print("Ab", Ab)
+    for i in range(0, m):
+        for j in range(0, m):
+            Ab[j][i] = A[j][jb[i]]
 
-    print("\nБазисный план Х: ")
-    print(x)
+    Ab_inv = linalg.inv(Ab)
+    print(Ab_inv)
 
-    print("\nБазисная матрица Ab: ")
-    print(Ab)
+    while True:
+        iter_count += 1
+        print("\nИтерация ", iter_count, "\n")
+        cb = [c[i] for i in jb]
+        print(cb)
+        u = np.dot(cb, Ab_inv)
+        print(u)
+        uA = np.dot(u, A)
+        print(uA)
+        delta = [uA[i] - c[i] for i in range(0, n)]
+        print(delta)
 
-    if (B is None):
-        B = np.linalg.inv(Ab)
-    print("\nОбратная базисная матрица Ab: ")
-    print(B)
+        is_optimal = True
+        j0 = -1
+        for i in range(len(delta)):
+            if i not in jb:
+                if delta[i] < 0:
+                    is_optimal = False
+                    j0 = i
+                    break
 
-    cb = np.array([c[j - 1] for j in Jb])
-    print("\nБазисные вектор сb:")
-    print(cb)
+        if is_optimal:
+            print("Оптимальный план x: ", x)
+            print("Базисные индексы: ", jb)
+            return
 
-    u = np.matmul(cb, Ab)
-    print("\nВектор потенциалов u:")
-    print(u)
+        print(j0)
 
-    delta = np.matmul(u, A) - c
-    print("\nВектор оценок delta:")
-    print(delta)
+        Aj0 = [A[i][j0] for i in range(0, m)]
+        z = np.dot(Ab_inv, Aj0)
+        print(z)
 
-    if (all([i >= 0 for i in delta])):
-        print("Решение найдено: ")
-        print(x)
-        return x, Jb
+        tetta = []
+        for i in range(0, m):
+            if z[i] > 0:
+                tetta.append(x[jb[i]] / z[i])
+            else:
+                tetta.append(np.inf)
 
-    print("\nМинимальная оценка из небазисных индексов: ", end='')
-    min_component_array = [(delta[j - 1], j) for j in Jn]
-    min_component = min(min_component_array, key=lambda x: x[0])
-    print(min_component[0])
-    print("Индекс: ", end='')
-    print(min_component[1])
+        print("\n", tetta)
+        tetta0 = min(tetta)
+        print(tetta0)
+        tetta_index = tetta.index(tetta0)
+        print(tetta_index)
 
-    print("\nВектор z: ")
-    z = np.matmul(B, A[:, min_component[1] - 1].reshape(B.shape[1], 1))
-    print(z)
+        if tetta0 == np.inf:
+            print("Неограничено")
+            return
 
-    print("\nВектор θ: ")
-    Theta = [(x[Jb[i] - 1] / z_element, i + 1) for i, z_element in enumerate(z) if z_element > 0]
-    Theta_min, index = min(Theta, key=lambda x: x[0])
-    print("θ{} = {}".format(index, float(Theta_min)))
+        jb[tetta_index] = j0
 
-    new_x = []
-    new_Jb = list(Jb)
-    new_Jb[index - 1] = min_component[1]
-    J_tmp = list(Jn)
-    J_tmp.extend(Jb)
-    new_Jn = np.array([elem for elem in J_tmp if elem not in new_Jb])
+        for i in range(0, n):
+            if i not in jb:
+                x[i] = 0
 
-    for i, old_x in enumerate(x):
-        if i + 1 in list(filter(lambda x: x != min_component[1], Jn)):
-            new_x.append(0)
-        elif i + 1 == min_component[1]:
-            new_x.append(float(Theta_min))
-        else:
-            j = list(Jb).index(i + 1)
-            new_x.append(float(x[Jb[j] - 1] - Theta_min * z[j]))
+        x[j0] = tetta0
+        for i in range(0, m):
+            if i != tetta_index:
+                x[jb[i]] = x[jb[i]] - tetta0 * z[i]
 
-    print("\nНовый базисный план:", new_x)
-    print("Новыe базисные индексы:", new_Jb)
-    print("Новые не базисные индексы:", new_Jn, '\n')
+        print("Новый план: ", x, "\n")
+        new_col = [A[i][j0] for i in range(0, m)]
+        Ab_inv = np.array(inv_matrix(Ab_inv, tetta_index, new_col, m))
+        print("\nМатрица обратная базисной\n", Ab_inv, "\n")
 
-    ds = []
-    for i, z_i in enumerate(z):
-        if i + 1 == index:
-            ds.append(float(1 / z[index - 1]))
-        else:
-            ds.append(float(-z_i / z[index - 1]))
+        for i in range(0, m):
+            Ab[i][tetta_index] = A[i][j0]
+        print(Ab)
+        print()
 
-    print("ds =", ds)
-    M = np.eye(len(B))
-    for i in range(len(B)):
-        M[i][index - 1] = ds[i]
 
-    new_B = np.dot(M, B)
-    print("Новая обратная матрица:")
-    print(new_B)
+def main():
+    # var1
+    # c = [-5, 2, 3, -4, -6, 0, 1, -5]
+    # A = [[0, 1, 4, 1, 0, -8, 1, 5],
+    #      [0, -1, 0, -1, 0, 0, 0, 0],
+    #      [0, 2, -1, 0, -1, 3, -1, 0],
+    #      [1, 1, 1, 1, 0, 3, 1, 1]]
+    # b = [36, -11, 10, 20]
+    # x = [4, 5, 0, 6, 0, 0, 0, 5]
+    # jb = [0, 1, 3, 7]
 
-    simplex_main_phase(c, A, new_B, new_x, new_Jb, iteration + 1)
+    # var3
+    c = [-6, -9, -5, 2, -6, 0, 1, 3]
+    A = [[0, -1, 1, -7.5, 0, 0, 0, 2],
+         [0, 2, 1, 0, -1, 3, -1.5, 0],
+         [1, -1, 1, -1, 0, 3, 1, 1]]
+    b = [6, 1.5, 10]
+    x = [4, 0, 6, 0, 4.5, 0, 0, 0]
+    jb = [0, 2, 4]
 
-# simplex_main_phase(c, A, None, x, Jb)
+    simplex_method(c, A, b, x, jb)
+
+
+if __name__ == '__main__':
+    main()
