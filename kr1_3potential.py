@@ -141,13 +141,13 @@ def solve_tt(a, b, c):
         delta = np.array([[c[i][j] - u[i] - v[j] for j in range(n)] for i in range(m)])
         print('delta ', delta)
         if delta.min() >= 0:
-            print("optimal plan \n", plan)
+            print("Оптимальный план: \n", plan)
             print('j_b ', j_b)
             s = 0
             for i in range(m):
                 for j in range(n):
                     s += plan[i, j] * c[i, j]
-            print("fun ", s)
+            print("Общие затраты на перевозку всей продукции для оптимального плана составляют: ", s)
             return
 
         def get_min():
