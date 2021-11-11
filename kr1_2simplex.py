@@ -28,25 +28,26 @@ def simplex_method(c, A, b, x, jb):
     n = len(x)
     m = len(jb)
     Ab = np.zeros((m, m))
-    print("Ab", Ab)
+    print("Матрицы:")
+    print("Ab =\n", Ab)
     for i in range(0, m):
         for j in range(0, m):
             Ab[j][i] = A[j][jb[i]]
 
     Ab_inv = linalg.inv(Ab)
-    print(Ab_inv)
+    print("Ab_inv=\n", Ab_inv)
 
     while True:
         iter_count += 1
         print("\nИтерация ", iter_count, "\n")
         cb = [c[i] for i in jb]
-        print(cb)
+        print("cb =", cb)
         u = np.dot(cb, Ab_inv)
-        print(u)
+        print("Вектр потенциалов u =", u)
         uA = np.dot(u, A)
-        print(uA)
+        print("uA", uA)
         delta = [uA[i] - c[i] for i in range(0, n)]
-        print(delta)
+        print("delta (вектор оценок)", delta)
 
         is_optimal = True
         j0 = -1
@@ -62,11 +63,11 @@ def simplex_method(c, A, b, x, jb):
             print("Базисные индексы: ", jb)
             return
 
-        print(j0)
+        print("Выберем индекс j0: ", j0)
 
         Aj0 = [A[i][j0] for i in range(0, m)]
         z = np.dot(Ab_inv, Aj0)
-        print(z)
+        print("Построим вектор z", z)
 
         tetta = []
         for i in range(0, m):
@@ -75,11 +76,11 @@ def simplex_method(c, A, b, x, jb):
             else:
                 tetta.append(np.inf)
 
-        print("\n", tetta)
+        print("\nTetta:\n", tetta)
         tetta0 = min(tetta)
-        print(tetta0)
+        print("Tetta0:\n", tetta0)
         tetta_index = tetta.index(tetta0)
-        print(tetta_index)
+        print("Tetta index:\n",tetta_index)
 
         if tetta0 == np.inf:
             print("Неограничено")
@@ -109,23 +110,23 @@ def simplex_method(c, A, b, x, jb):
 
 def main():
     # var1
-    # c = [-5, 2, 3, -4, -6, 0, 1, -5]
-    # A = [[0, 1, 4, 1, 0, -8, 1, 5],
-    #      [0, -1, 0, -1, 0, 0, 0, 0],
-    #      [0, 2, -1, 0, -1, 3, -1, 0],
-    #      [1, 1, 1, 1, 0, 3, 1, 1]]
-    # b = [36, -11, 10, 20]
-    # x = [4, 5, 0, 6, 0, 0, 0, 5]
-    # jb = [0, 1, 3, 7]
+    c = [-5, 2, 3, -4, -6, 0, 1, -5]
+    A = [[0, 1, 4, 1, 0, -8, 1, 5],
+         [0, -1, 0, -1, 0, 0, 0, 0],
+         [0, 2, -1, 0, -1, 3, -1, 0],
+         [1, 1, 1, 1, 0, 3, 1, 1]]
+    b = [36, -11, 10, 20]
+    x = [4, 5, 0, 6, 0, 0, 0, 5]
+    jb = [0, 1, 3, 7]
 
     # var3
-    c = [-6, -9, -5, 2, -6, 0, 1, 3]
-    A = [[0, -1, 1, -7.5, 0, 0, 0, 2],
-         [0, 2, 1, 0, -1, 3, -1.5, 0],
-         [1, -1, 1, -1, 0, 3, 1, 1]]
-    b = [6, 1.5, 10]
-    x = [4, 0, 6, 0, 4.5, 0, 0, 0]
-    jb = [0, 2, 4]
+    # c = [-6, -9, -5, 2, -6, 0, 1, 3]
+    # A = [[0, -1, 1, -7.5, 0, 0, 0, 2],
+    #      [0, 2, 1, 0, -1, 3, -1.5, 0],
+    #      [1, -1, 1, -1, 0, 3, 1, 1]]
+    # b = [6, 1.5, 10]
+    # x = [4, 0, 6, 0, 4.5, 0, 0, 0]
+    # jb = [0, 2, 4]
 
     simplex_method(c, A, b, x, jb)
 
