@@ -22,42 +22,56 @@ def dual_simplex_method(a, b, c, y, jb):
     ab_inv = linalg.inv(ab)
 
     koplan = np.dot(y, a) - c
+    print("Вводные параметры задачи:")
+    print("A=\n", a)
+    print("b=", b)
+    print("c =", c)
+    print("Заданный начальный двойственный план yнач=", y)
+    print("Jb =", jb)
+    print("Соответствующий ему коплан=", koplan)
 
     iter = 0
     while True:
-        print('iter', iter)
-        print('koplan', koplan)
+        iter += 1
+        print('___________________________Итерация', iter, "__________________________")
+        print('koplan текущий', koplan)
         kapa_b = np.dot(ab_inv, b)
-        print('kapa_b', kapa_b)
+        print('базисные компоненты псевдоплана χб=', kapa_b)
         if min(kapa_b) >= 0:
+            print("Условие KSIb>=0 выполняется")
             kapa = [0] * n
             for j, i in zip(kapa_b, jb):
                 kapa[i] = j
             print("\nОптимальный план: \n", kapa)
+            cFloat = [float(i) for i in c]
+            cx0 = np.dot(cFloat, kapa)
+            print("c'x0=", cx0)
             return
+        else:
+            print("Условие KSIб>=0 не выполняется")
         k = np.argmin(kapa_b)
         j_n = [j for j in range(n) if j not in jb]
         e = np.zeros(m)
         e[k] = 1
         mu = e.dot(ab_inv.dot(a))
-        print('mu=', mu)
+        print('Находим числа μ=', mu)
         if all(mu[i] >= 0 for i in j_n):
             print("Задача несовместна")
             return
 
-        s = [np.inf] * n
+        sigma = [np.inf] * n
         for j in j_n:
             if mu[j] < 0:
-                s[j] = -koplan[j] / mu[j]
-        print('step=', s)
-        j0 = np.argmin(s)
-        print('j0', j0)
-        y = y + (s[j0] * e).dot(b)
-        print('y_new=', y)
-        koplan = koplan + s[j0] * mu
-        print('koplan_new', koplan)
+                sigma[j] = -koplan[j] / mu[j]
+        print('Вычисляем шаги σ', sigma)
+        j0 = np.argmin(sigma)
+        print('j0=', j0 + 1)
+        y = y + (sigma[j0] * e).dot(b)
+        print('Построим новый двойственный план y_new=', y)
+        koplan = koplan + sigma[j0] * mu
+        print('Соответствующий ему новый коплан koplan_new =', koplan)
         jb[k] = j0
-        print('j_new=%s', jb)
+        print('Новый базис j_new=', jb)
         ab_inv = inv_matrix(ab_inv, k, a[:, j0], m)
 
 
